@@ -5,6 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import './styles/index.css';
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
+import { AUTH_TOKEN } from './constants';
+import { setContext } from 'apollo-link-context';
 // import reportWebVitals from './reportWebVitals';
 
 import { ApolloProvider } from 'react-apollo';
@@ -16,8 +18,19 @@ const httpLink = createHttpLink({
   uri: 'http://localhost:4000',
 });
 
+//middleware that modify req sent to the server
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem(AUTH_TOKEN);
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
 const client = new ApolloClient({
-  link: httpLink,
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
